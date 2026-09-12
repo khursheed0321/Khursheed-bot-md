@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KHURSHEED BOT — WhatsApp Pairing Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root{
+    --bg:#05070a;
+    --panel:#0b0f14;
+    --panel-2:#0f151c;
+    --line:#1c2530;
+    --green:#39ff9d;
+    --green-dim:#1c8f5c;
+    --amber:#ffb454;
+    --red:#ff5c5c;
+    --text:#dfe8ee;
+    --muted:#7c8a97;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Space Grotesk',sans-serif;
+    background-image:
+      linear-gradient(rgba(57,255,157,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,255,157,0.035) 1px, transparent 1px);
+    background-size: 34px 34px;
+  }
+  code, .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:var(--green); text-decoration:none;}
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px; border-bottom:1px solid var(--line);
+    background:rgba(5,7,10,0.85); backdrop-filter:blur(6px);
+    position:sticky; top:0; z-index:10;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-family:'JetBrains Mono',monospace; font-weight:800; letter-spacing:0.5px;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--green); box-shadow:0 0 10px var(--green); animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .badge{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); border:1px solid var(--line); padding:4px 10px; border-radius:20px;}
+
+  .hero{max-width:960px; margin:0 auto; padding:56px 24px 24px; text-align:center;}
+  .hero .eyebrow{font-family:'JetBrains Mono',monospace; color:var(--green); font-size:12px; letter-spacing:3px; text-transform:uppercase; margin-bottom:14px;}
+  .hero h1{font-size:clamp(2rem,5vw,3.2rem); line-height:1.1; margin:0 0 14px; font-weight:700;}
+  .hero h1 span{color:var(--green);}
+  .hero p{color:var(--muted); font-size:16px; max-width:560px; margin:0 auto;}
+
+  .stat-strip{max-width:960px; margin:28px auto 0; padding:0 24px; display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px; text-align:center;}
+  .stat .num{font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:800; color:var(--green);}
+  .stat .lbl{font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:4px;}
+
+  .wrap{max-width:960px; margin:0 auto; padding:32px 24px 60px; display:grid; gap:20px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px;}
+  .card h3{margin:0 0 16px; font-size:15px; display:flex; align-items:center; gap:8px; color:var(--text);}
+  .card h3 i{color:var(--green);}
+
+  label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-family:'JetBrains Mono',monospace;}
+  input[type=text]{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    padding:12px 14px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:14px; margin-bottom:12px;
+  }
+  input[type=text]:focus{outline:none; border-color:var(--green);}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; padding:13px; border-radius:8px; border:none; cursor:pointer;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; letter-spacing:0.5px;
+    background:var(--green); color:#031008; transition:transform .15s ease, opacity .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:disabled{opacity:.5; cursor:not-allowed; transform:none;}
+  .btn.secondary{background:transparent; border:1px solid var(--line); color:var(--text);}
+  .btn.danger{background:var(--red); color:#1a0000;}
+  .btn.wa{background:#25D366; color:#04220f;}
+
+  .progress-container{width:100%; background:var(--line); border-radius:10px; margin-top:14px; display:none; height:8px; overflow:hidden;}
+  .progress-bar{width:0%; height:100%; background:linear-gradient(90deg, var(--green-dim), var(--green));}
+  .loading-text{font-size:11px; color:var(--muted); margin-top:6px; text-align:center; font-family:'JetBrains Mono',monospace;}
+  .pairing-result{margin-top:16px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:22px; letter-spacing:3px; color:var(--amber); min-height:30px;}
+
+  .hidden{display:none !important;}
+  .status-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .status-badge{padding:5px 14px; border-radius:20px; font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; letter-spacing:1px;}
+  .status-badge.connected{background:rgba(57,255,157,0.15); color:var(--green); border:1px solid var(--green-dim);}
+  .status-badge.disconnected{background:rgba(255,92,92,0.12); color:var(--red); border:1px solid #7a2222;}
+
+  .console-body{background:#000; border:1px solid var(--line); border-radius:10px; height:230px; overflow-y:auto; padding:14px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green);}
+  .console-body div{margin-bottom:4px; opacity:.9;}
+
+  .cmd-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;}
+  .cmd-item{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:'JetBrains Mono',monospace; font-size:12.5px;}
+  .cmd-item b{color:var(--green);}
+  .cmd-item span{display:block; color:var(--muted); font-size:11px; margin-top:3px; font-family:'Space Grotesk',sans-serif;}
+
+  .owner-card{display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between;}
+  .owner-info{display:flex; align-items:center; gap:14px;}
+  .avatar{width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,var(--green-dim),var(--green)); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:800; color:#031008; font-size:18px;}
+  .owner-name{font-weight:700; font-size:15px;}
+  .owner-role{color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace;}
+  .owner-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .owner-actions .btn{width:auto; padding:10px 16px;}
+
+  footer{text-align:center; padding:24px; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> KHURSHEED_BOT</div>
+    <div class="badge">Multi-Device Engine</div>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">// WhatsApp Automation Console</div>
+    <h1>Pair your number.<br><span>Run the bot in seconds.</span></h1>
+    <p>Generate a live pairing code, watch the connection log in real time, and manage everything from this dashboard.</p>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat"><div class="num" id="totalActive">0</div><div class="lbl">Bots Active</div></div>
+    <div class="stat"><div class="num">42+</div><div class="lbl">Commands</div></div>
+    <div class="stat"><div class="num">24/7</div><div class="lbl">Uptime Target</div></div>
+  </div>
+
+  <div class="wrap">
+
+    <div id="setupSection" class="card">
+      <h3><i class="fas fa-plus-circle"></i>Create a bot session</h3>
+      <label>Session name (any unique name for your bot)</label>
+      <input type="text" id="userIdInput" placeholder="e.g. mybot1">
+      <button class="btn" id="createBtn">Create / Select Session</button>
+    </div>
+
+    <div id="userDashboard" class="hidden">
+      <div id="stage1" class="card">
+        <h3><i class="fas fa-link"></i>Pairing code</h3>
+        <label>WhatsApp number, with country code, no plus sign</label>
+        <input type="text" id="pairNumber" placeholder="923001234567">
+        <button class="btn" id="pairBtn">Generate Code</button>
+        <div id="progressContainer" class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
+        <div class="loading-text" id="loadingText"></div>
+        <div class="pairing-result" id="pairingResult"></div>
+      </div>
+
+      <div id="stage2" class="card hidden">
+        <div class="status-row">
+          <div><span id="connectionStatus" class="status-badge disconnected">DISCONNECTED</span>
+          <span class="mono" id="activeBotName" style="margin-left:10px;color:var(--muted);font-size:12px;"></span></div>
+          <button class="btn danger" id="logoutBtn" style="width:auto;padding:8px 16px;">Log out</button>
+        </div>
+        <h3 style="margin-top:6px;"><i class="fas fa-terminal"></i>Live console</h3>
+        <div class="console-body" id="console"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-list"></i>Command highlights</h3>
+      <div class="cmd-grid">
+        <div class="cmd-item"><b>.menu</b><span>Show full command list</span></div>
+        <div class="cmd-item"><b>.pair</b><span>Link an extra number (owner)</span></div>
+        <div class="cmd-item"><b>.autotyping</b><span>Toggle typing indicator</span></div>
+        <div class="cmd-item"><b>.autorecording</b><span>Toggle recording indicator</span></div>
+        <div class="cmd-item"><b>.antilink</b><span>Auto-remove group links</span></div>
+        <div class="cmd-item"><b>.antidelete</b><span>Recover deleted messages</span></div>
+        <div class="cmd-item"><b>.tagall</b><span>Mention every group member</span></div>
+        <div class="cmd-item"><b>.public / .private</b><span>Switch access mode</span></div>
+      </div>
+    </div>
+
+    <div class="card owner-card">
+      <div class="owner-info">
+        <div class="avatar">AC</div>
+        <div>
+          <div class="owner-name">KHURSHEED — Owner</div>
+          <div class="owner-role">KHURSHEED GALKALA</div>
+        </div>
+      </div>
+      <div class="owner-actions">
+        <a class="btn wa" href="https://wa.me/923044380237" target="_blank"><i class="fab fa-whatsapp"></i> Message Owner</a>
+        <a class="btn secondary" href="https://whatsapp.com/channel/0029VbCSdr5JuyA8YJaPGV1o" target="_blank"><i class="fas fa-satellite-dish"></i> Join Channel</a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>KHURSHEED BOT &middot; Powered by Khursheed Galkala</footer>
+
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+  const socket = io();
+  let currentUserId = null;
+
+  document.getElementById('createBtn').onclick = () => {
+    const userId = document.getElementById('userIdInput').value.trim();
+    if (!userId) return alert('Enter a session name');
+    currentUserId = userId;
+    socket.emit('set-user', userId);
+    document.getElementById('activeBotName').innerText = 'Session: ' + userId;
+    document.getElementById('userDashboard').classList.remove('hidden');
+    document.getElementById('stage1').classList.remove('hidden');
+    document.getElementById('stage2').classList.add('hidden');
+  };
+
+  socket.on('total-active', (count) => {
+    document.getElementById('totalActive').innerText = count;
+  });
+
+  socket.on('pairing-code', (code) => {
+    document.getElementById('progressContainer').style.display = 'none';
+    document.getElementById('loadingText').innerText = '';
+    document.getElementById('pairingResult').innerText = code;
+  });
+
+  socket.on('console', (log) => {
+    const consoleDiv = document.getElementById('console');
+    const entry = document.createElement('div');
+    entry.innerHTML = `[${log.timestamp}] ${log.message}`;
+    consoleDiv.appendChild(entry);
+    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+  });
+
+  socket.on('connection-status', (status) => {
+    const badge = document.getElementById('connectionStatus');
+    if (status.connected) {
+      badge.className = 'status-badge connected';
+      badge.innerText = 'CONNECTED';
+      document.getElementById('stage1').classList.add('hidden');
+      document.getElementById('stage2').classList.remove('hidden');
+      document.getElementById('progressContainer').style.display = 'none';
+    } else {
+      badge.className = 'status-badge disconnected';
+      badge.innerText = 'DISCONNECTED';
+    }
+  });
+
+  let isPairing = false;
+  document.getElementById('pairBtn').onclick = () => {
+    if (isPairing) return;
+    const number = document.getElementById('pairNumber').value.trim();
+    if (!number) return alert('Enter a number');
+
+    isPairing = true;
+    document.getElementById('pairBtn').disabled = true;
+
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const pairingResult = document.getElementById('pairingResult');
+    const loadingText = document.getElementById('loadingText');
+
+    pairingResult.innerText = '';
+    loadingText.innerText = 'Connecting to WhatsApp...';
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+
+    let width = 0;
+    const interval = setInterval(() => {
+      if (width >= 90) { clearInterval(interval); }
+      else { width += 2; progressBar.style.width = width + '%'; }
+    }, 100);
+
+    socket.emit('pair-request', { userId: currentUserId, number });
+
+    setTimeout(() => {
+      isPairing = false;
+      document.getElementById('pairBtn').disabled = false;
+    }, 10000);
+  };
+
+  document.getElementById('logoutBtn').onclick = () => {
+    socket.emit('logout', currentUserId);
+  };
+</script>
+</body>
+</html>
